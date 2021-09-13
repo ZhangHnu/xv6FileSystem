@@ -15,6 +15,17 @@ strcpy(char *s, const char *t)
   return os;
 }
 
+char*
+strcat(char *s, const char *p)//post
+{
+  char *os;
+  os = s;
+  int n = strlen(os);
+  for(int i = 0; p[i]; i++)
+    os[n++] = p[i];
+  return os;
+}
+
 int
 strcmp(const char *p, const char *q)
 {
@@ -32,6 +43,7 @@ strlen(const char *s)
     ;
   return n;
 }
+
 
 void*
 memset(void *dst, int c, uint n)

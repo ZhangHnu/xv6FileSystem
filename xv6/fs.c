@@ -626,10 +626,11 @@ namex(char *path, int nameiparent, char *name)
 {
   struct inode *ip, *next;
 
-  if(*path == '/')
-    ip = iget(ROOTDEV, ROOTINO);
-  else
-    ip = idup(myproc()->cwd);
+  ip = iget(ROOTDEV, ROOTINO);
+  // if(*path == '/')
+  //   ip = iget(ROOTDEV, ROOTINO);
+  // else
+  //   ip = idup(myproc()->cwd);
 
   while((path = skipelem(path, name)) != 0){
     ilock(ip);
