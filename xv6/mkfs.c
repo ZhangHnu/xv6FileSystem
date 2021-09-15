@@ -15,7 +15,9 @@
 #define static_assert(a, b) do { switch (0) case 0: case (a): ; } while (0)
 #endif
 
-#define NINODES 200
+// #define NINODES 200
+#define NBLOCKS 4096  // Number of blocks per blockgroup
+#define BGINODES 8
 
 // Disk layout:
 // [ boot block | sb block | log | inode blocks | free bit map | data blocks ]
@@ -25,6 +27,14 @@ int ninodeblocks = NINODES / IPB + 1;
 int nlog = LOGSIZE;
 int nmeta;    // Number of meta blocks (boot, sb, nlog, inode, bitmap)
 int nblocks;  // Number of data blocks
+
+// Blockgroup layout
+// [super block | inode blocks | ib | db | data blocks ]
+
+int nbgmap = NBLOCKGROUPS/BPB + 1;  // Number of bitmap blocks of blockgroup
+int bginodeblocks = BGINODES/IPB;   // Number of inode block per bg
+int bgmeta;   // Number of meta blocks (sb, inode, bitmap)
+int bgblocks;
 
 int fsfd;
 struct superblock sb;
@@ -91,17 +101,23 @@ main(int argc, char *argv[])
   }
 
   // 1 fs block = 1 disk sector
-  nmeta = 2 + nlog + ninodeblocks + nbitmap;
-  nblocks = FSSIZE - nmeta;
+  // nmeta = 2 + nlog + ninodeblocks + nbitmap;
+  // nblocks = FSSIZE - nmeta;
 
   sb.size = xint(FSSIZE);
-  sb.nblocks = xint(nblocks);
-  sb.ninodes = xint(NINODES);
   sb.nlog = xint(nlog);
   sb.logstart = xint(2);
-  sb.inodestart = xint(2+nlog);
-  sb.bmapstart = xint(2+nlog+ninodeblocks);
 
+  bgmeta = 1 + bginodeblocks + nbgmap;
+  sb.bgninodes = xint(BGINODES);
+  sb.bgnblocks = NBLOCKS - bgmeta;
+
+  sb.bgsize = xint(NBLOCKS);
+  sb.nbgroups = xint(NBLOCKGROUPS);
+  sb.bgstart = xint(2+nlog+nbgmap+NBLOCKS);   // The second blockgroup
+  sb.bgistart = xint(sb.bgstart + 2);
+  sb.bgmapstart = xint(sb.bgstart + 1);
+  
   printf("nmeta %d (boot, super, log blocks %u inode blocks %u, bitmap blocks %u) blocks %d total %d\n",
          nmeta, nlog, ninodeblocks, nbitmap, nblocks, FSSIZE);
 

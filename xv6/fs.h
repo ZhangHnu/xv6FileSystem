@@ -9,16 +9,23 @@
 // [ boot block | super block | log | inode blocks |
 //                                          free bit map | data blocks]
 //
+// Blockgroup layout:
+// [ superblock | bit map | inode blocks | data blocks ]
 // mkfs computes the super block and builds an initial file system. The
 // super block describes the disk layout:
 struct superblock {
-  uint size;         // Size of file system image (blocks)
-  uint nblocks;      // Number of data blocks
-  uint ninodes;      // Number of inodes.
-  uint nlog;         // Number of log blocks
-  uint logstart;     // Block number of first log block
-  uint inodestart;   // Block number of first inode block
-  uint bmapstart;    // Block number of first free map block
+  uint size;          // Size of file system image (blocks)
+  uint nlog;          // Number of log blocks
+  uint logstart;      // Block number of first log block
+
+  uint bgninodes;     // Number of inode blocks per blockgroup
+  uint bgnblocks;     // Number of data blocks per blockgroup
+
+  uint bgsize;        // Size of blockgroup image (blocks)
+  uint nbgroups;      // Number of blockgroups;
+  uint bgstart;       // First block number of first blockgroup
+  uint bgistart;      // Block number of first inode block in first blockgroup
+  uint bgmapstart;    // Block number of first free map block in blockgroup
 };
 
 #define NDIRECT 12
@@ -41,14 +48,20 @@ struct dinode {
 // Block containing inode i
 #define IBLOCK(i, sb)     ((i) / IPB + sb.inodestart)
 
+// Block number of inode i in blockgroup
+#define IBLOCKGROUP(i,sb)     ((i) / IPB + sb.bginodestart)
+
 // Bitmap bits per block
 #define BPB           (BSIZE*8)
 
 // Block of free map containing bit for block b
 #define BBLOCK(b, sb) (b/BPB + sb.bmapstart)
 
+// Block number of block b in blockgroup
+#define BBLOCKGROUP(b, sb)  (b/BPB + sb.bgmapstart)
+
 // Directory is a file containing a sequence of dirent structures.
-#define DIRSIZ 14*20
+#define DIRSIZ 126
 
 struct dirent {
   ushort inum;
