@@ -180,9 +180,9 @@ iinit(int dev)
 
   readsb(dev, &sb);
   cprintf("sb: size %d nblocks %d ninodes %d nlog %d logstart %d\
- inodestart %d bmap start %d\n", sb.size, sb.nblocks,
-          sb.ninodes, sb.nlog, sb.logstart, sb.inodestart,
-          sb.bmapstart);
+ blockgroup_map start %d blockgroup start %d\n", sb.size, sb.bgnblocks*sb.nbgroups,
+          sb.bgninodes*sb.nbgroups, sb.nlog, sb.logstart, sb.bgmapstart,
+          sb.bgstart);
 }
 
 static struct inode* iget(uint dev, uint inum);
@@ -198,7 +198,7 @@ ialloc(uint dev, short type)
   struct buf *bp;
   struct dinode *dip;
 
-  for(inum = 1; inum < sb.ninodes; inum++){
+  for(inum = 1; inum < sb.bgninodes*nbgroups; inum++){
     bp = bread(dev, IBLOCK(inum, sb));
     dip = (struct dinode*)bp->data + inum%IPB;
     if(dip->type == 0){  // a free inode
